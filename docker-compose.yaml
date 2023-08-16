@@ -1,0 +1,108 @@
+version: '3'
+services:
+  yelb-db:
+    image: mreferre/yelb-db:0.5
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: yelb_user
+      POSTGRES_PASSWORD: yelb_password
+      POSTGRES_DB: yelb_db
+    volumes:
+      - yelb-db-data:/var/lib/postgresql/data
+
+  odilia-db-replication-01:
+    image: mreferre/yelb-db:0.5
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: yelb_user
+      POSTGRES_PASSWORD: yelb_password
+      POSTGRES_DB: yelb_db
+    volumes:
+      - yelb-db-replica-data-01:/var/lib/postgresql/data
+
+  odilia-db-replication-02:
+    image: mreferre/yelb-db:0.5
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: yelb_user
+      POSTGRES_PASSWORD: yelb_password
+      POSTGRES_DB: yelb_db
+    volumes:
+      - yelb-db-replica-data-02:/var/lib/postgresql/data
+
+  odilia-db-replication-03:
+    image: mreferre/yelb-db:0.5
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_USER: yelb_user
+      POSTGRES_PASSWORD: yelb_password
+      POSTGRES_DB: yelb_db
+    volumes:
+      - yelb-db-replica-data-03:/var/lib/postgresql/data
+
+  redis-server:
+    image: redis:4.0.2
+    command: "redis-server" "/etc/redis/redis.conf"
+    volumes:
+      - ./redis-server:/etc/redis/redis.conf
+    ports:
+      - "6379:6379"
+
+  redis-server01:
+    image: redis:4.0.2
+    command: "redis-server" "/etc/redis/redis.conf"
+     volumes:
+      - ./redis-server01:/etc/redis/redis.conf
+    ports:
+      - "6380:6379"
+
+  redis-server02:
+    image: redis:4.0.2
+    command: "redis-server" "/etc/redis/redis.conf"
+     volumes:
+      - ./redis-server02:/etc/redis/redis.conf
+    ports:
+      - "6381:6379"
+
+  redis-sentinel01:
+    image: redis:4.0.2
+    command: 
+      - "6379:6379"
+    volumes:
+      - ./redis-sentinel01:/etc/redis/sentinel.conf
+
+  redis-sentinel02:
+    image: redis:4.0.2
+    command: ["redis-server", "/usr/local/etc/redis/sentinel.conf"]
+    ports:
+      - "6380:6379"
+    volumes:
+      - ./redis-sentinel02:/etc/redis/sentinel.conf
+
+  redis-sentinel03:
+    image: redis:4.0.2
+    command: ["redis-server", "/usr/local/etc/redis/sentinel.conf"]
+    ports:
+      - "6381:6379"
+    volumes:
+      ./redis-sentinel03:/etc/redis/sentinel.conf
+
+  yelb-app-server:
+    image: mreferre/yelb-appserver:0.5
+    ports:
+      - "80:80"
+
+  yelb-ui:
+    image: mreferre/yelb-ui:0.7
+    ports:
+      - "8080:80"
+
+volumes:
+  yelb-db-data:
+  yelb-db-replica-data-01:
+  yelb-db-replica-data-02:
+  yelb-db-replica-data-03:
