@@ -1,0 +1,174 @@
+version: '3'
+services:
+  yelb-db:
+    image: mreferre/yelb-db:0.5
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: yelb_user
+      POSTGRES_PASSWORD: yelb_password
+      POSTGRES_DB: yelb_db
+    volumes:
+      - yelb-db-data:/var/lib/postgresql/data
+    depends_on: 
+      - odilia-db-replication-01
+      - odilia-db-replication-02
+      - odilia-db-replication-03
+    networks:
+     - mohamine
+
+  odilia-db-replication-01:
+    image: mreferre/yelb-db:0.5
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: yelb_user
+      POSTGRES_PASSWORD: yelb_password
+      POSTGRES_DB: yelb_db
+    volumes:
+      - yelb-db-replica-data-01:/var/lib/postgresql/data
+    networks:
+     - mohamine
+
+  odilia-db-replication-02:
+    image: mreferre/yelb-db:0.5
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: yelb_user
+      POSTGRES_PASSWORD: yelb_password
+      POSTGRES_DB: yelb_db
+    volumes:
+      - yelb-db-replica-data-02:/var/lib/postgresql/data
+    networks:
+     - mohamine
+
+  odilia-db-replication-03:
+    image: mreferre/yelb-db:0.5
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_USER: yelb_user
+      POSTGRES_PASSWORD: yelb_password
+      POSTGRES_DB: yelb_db
+    volumes:
+      - yelb-db-replica-data-03:/var/lib/postgresql/data
+    networks:
+     - mohamine
+
+  redis-server:
+    image: redis:4.0.2
+    command: "redis-server/etc/redis/redis.conf"
+    volumes:
+      - ./redis-server:/etc/redis/redis.conf
+    ports:
+      - "6379:6379"
+    depends_on:
+     - odilia-redis-sentinel01
+     - redis-sever01
+     - redis-server02
+    networks:
+     - mohamine
+
+  redis-server01:
+    image: redis:4.0.2
+    command: ["redis-server/etc/redis/redis.conf"]
+    volumes:
+      - ./redis-server01:/etc/redis/redis.conf
+    ports:
+      - "6380:6379"
+    networks:
+     - mohamine
+
+  redis-server02:
+    image: redis:4.0.2
+    command: ["redis-server/etc/redis/redis.conf"]
+    volumes:
+      - ./redis-server02:/etc/redis/redis.conf
+    ports:
+      - "6381:6379"
+    networks:
+     - mohamine
+
+  odilia-redis-sentinel01:
+    image: redis:4.0.2
+    command: ["redis-sentinel/etc/redis/sentinel.conf"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./odilia-redis-sentinel01:/etc/redis/sentinel.conf
+    depends_on:
+     - odilia-redis-sentinel02
+     - odilia-redis-sentinel03
+    networks:
+     - mohamine
+
+  odilia-redis-sentinel02:
+    image: redis:4.0.2
+    command: ["redis-sentinel/etc/redis/sentinel.conf"]
+    ports:
+      - "6380:6379"
+    volumes:
+      - ./odilia-redis-sentinel02:/etc/redis/sentinel.conf
+    networks:
+     - mohamine
+
+  odilia-redis-sentinel03:
+    image: redis:4.0.2
+    command: ["redis-sentinel/etc/redis/sentinel.conf"]
+    ports:
+      - "6381:6379"
+    volumes:
+      - ./odilia-redis-sentinel03:/etc/redis/sentinel.conf
+    networks:
+     - mohamine
+
+  yelb-app-server:
+    image: mreferre/yelb-appserver:0.5
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+     - redis-server
+     - yelb-db
+    networks:
+     - mohamine
+
+  yelb-ui:
+    image: mreferre/yelb-ui:0.7
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+     - yelb-app-server
+    networks:
+     - mohamine
+    
+  networks:
+    mohamine:
+      driver: bridge
+
+
+volumes:
+  yelb-db-data:
+    driver: local
+  yelb-db-replica-data-01:
+    driver: local
+  yelb-db-replica-data-02:
+    driver: local
+  yelb-db-replica-data-03:
+    driver: local
+  redis-server:
+    driver: local
+  redis-server01:
+    driver: local
+  redis-server02:
+    driver: local
+  odilia-redis-sentinel01:
+    driver: local
+  odilia-redis-sentinel02:
+    driver: local
+  odilia-redis-sentinel03:
+    driver: local
+  
+
